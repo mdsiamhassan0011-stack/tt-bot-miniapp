@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#070B1A">
+<title>TT BOT</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#070B1A;--bg2:#0D1430;--card:rgba(255,255,255,.06);--card2:rgba(255,255,255,.1);
+  --line:rgba(255,255,255,.12);--txt:#EEF2FF;--mut:#8E9ABF;
+  --cy:#3DE0FF;--vi:#7B5CFF;--gold:#FFC94A;--gold2:#FF9A3D;--ok:#3DDC97;--bad:#FF5C7A;
+  --nav:68px;--r:20px;
+}
+[data-theme=light]{
+  --bg:#EEF2FF;--bg2:#FFFFFF;--card:rgba(255,255,255,.75);--card2:rgba(255,255,255,.95);
+  --line:rgba(20,30,70,.12);--txt:#0E1533;--mut:#5A6690;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);
+  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;overscroll-behavior:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.num{font-variant-numeric:tabular-nums}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;
+  background:radial-gradient(120% 60% at 50% -10%,rgba(123,92,255,.35),transparent 60%),
+             radial-gradient(80% 40% at 100% 30%,rgba(61,224,255,.14),transparent 70%),var(--bg)}
+#view{flex:1;overflow-y:auto;overflow-x:hidden;padding:calc(env(safe-area-inset-top) + 12px) 16px 24px;
+  -webkit-overflow-scrolling:touch;contain:content}
+.page{display:none;animation:in .22s ease-out}
+.page.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:4px 0 12px}
+h3{font-size:15px;font-weight:650;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1;min-width:0}
+.mut{color:var(--mut);font-size:13px}
+.ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:12px}
+.stat b{display:block;font-size:18px;margin-top:2px}
+
+/* brand */
+.logo{width:36px;height:36px;flex:none}
+.ava{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;
+  background:linear-gradient(135deg,var(--vi),var(--cy));color:#fff;overflow:hidden}
+.ava img{width:100%;height:100%;object-fit:cover}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
+  background:var(--card2);border:1px solid var(--line);font-size:12.5px;font-weight:600}
+
+/* home */
+.bal{text-align:center;margin:10px 0 2px}
+.bal b{font-size:44px;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(180deg,#fff,#FFD97A);-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-theme=light] .bal b{background:linear-gradient(180deg,#b86a00,#FF9A3D);-webkit-background-clip:text;background-clip:text}
+.bal span{font-size:16px;font-weight:700;color:var(--gold);margin-left:4px}
+.stage{position:relative;display:grid;place-items:center;margin:8px 0 6px;height:min(58vw,260px)}
+.stage:before{content:"";position:absolute;width:86%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,201,74,.32),transparent 65%);filter:blur(6px)}
+#coin{position:relative;width:min(56vw,236px);aspect-ratio:1;border-radius:50%;touch-action:manipulation;
+  transition:transform .09s ease-out;will-change:transform;user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none}
+#coin svg{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 14px 28px rgba(255,154,61,.35))}
+#coin.dis{filter:grayscale(.7) brightness(.8)}
+.fl{position:fixed;pointer-events:none;font-weight:800;font-size:26px;color:#fff;z-index:30;
+  text-shadow:0 2px 12px rgba(255,201,74,.9);animation:fl .85s ease-out forwards;will-change:transform,opacity}
+@keyframes fl{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-90px)}}
+.bar{height:10px;border-radius:99px;background:var(--card2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s linear;
+  background:linear-gradient(90deg,var(--vi),var(--cy))}
+.bar.en i{background:linear-gradient(90deg,var(--gold2),var(--gold))}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;
+  border-radius:14px;font-weight:700;background:linear-gradient(135deg,var(--vi),#4D8BFF);color:#fff;
+  box-shadow:0 6px 20px rgba(123,92,255,.35);transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.sec{background:var(--card2);color:var(--txt);box-shadow:none;border:1px solid var(--line)}
+.btn.ok{background:linear-gradient(135deg,#1FBF7D,var(--ok));color:#04251a;box-shadow:none}
+.btn.sm{min-height:36px;padding:0 14px;border-radius:11px;font-size:13px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.full{width:100%}
+
+/* lists */
+.item{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px}
+.ico{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:20px;flex:none;
+  background:linear-gradient(135deg,rgba(123,92,255,.35),rgba(61,224,255,.25))}
+.plus{color:var(--ok);font-weight:700}.minus{color:var(--bad);font-weight:700}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.day{border-radius:12px;padding:8px 0;text-align:center;font-size:11px;background:var(--card2);border:1px solid var(--line)}
+.day b{display:block;font-size:12px;margin-top:2px}
+.day.done{background:rgba(61,220,151,.18);border-color:rgba(61,220,151,.5)}
+.day.now{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,201,74,.25)}
+.seg{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{padding:8px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);
+  font-size:13px;font-weight:600;white-space:nowrap}
+.seg button.on{background:linear-gradient(135deg,var(--vi),#4D8BFF);border-color:transparent;color:#fff}
+.me{position:sticky;bottom:0;margin-top:8px;border-color:var(--cy)}
+.badge{font-size:11px;padding:3px 8px;border-radius:99px;font-weight:700}
+.b-pending{background:rgba(255,201,74,.2);color:var(--gold)}
+.b-approved,.b-completed{background:rgba(61,220,151,.2);color:var(--ok)}
+.b-rejected{background:rgba(255,92,122,.2);color:var(--bad)}
+.banner{background:linear-gradient(135deg,rgba(123,92,255,.4),rgba(61,224,255,.25));margin-bottom:12px}
+.empty{text-align:center;color:var(--mut);padding:28px 10px}
+
+/* nav */
+nav{flex:none;display:grid;grid-template-columns:repeat(5,1fr);height:calc(var(--nav) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);background:var(--bg2);border-top:1px solid var(--line)}
+nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:11px;color:var(--mut);font-weight:600}
+nav button span{font-size:21px;line-height:1;transition:transform .15s}
+nav button.on{color:var(--cy)}nav button.on span{transform:translateY(-2px) scale(1.08)}
+
+/* sheet / toast */
+#shade{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:40}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow-y:auto;z-index:41;
+  background:var(--bg2);border-radius:26px 26px 0 0;border-top:1px solid var(--line);
+  padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);transform:translateY(105%);transition:transform .25s ease-out}
+#sheet.on{transform:none}
+label{display:block;font-size:12.5px;color:var(--mut);margin:12px 0 5px}
+input,select{width:100%;height:46px;padding:0 14px;border-radius:13px;background:var(--card);
+  border:1px solid var(--line);outline:0}
+input:focus,select:focus{border-color:var(--cy)}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translate(-50%,-90px);
+  z-index:60;padding:11px 18px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);
+  font-weight:600;max-width:90vw;text-align:center;transition:transform .25s}
+#toast.on{transform:translate(-50%,0)}
+.load{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:var(--bg)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-height:640px){.stage{height:200px}#coin{width:180px}.bal b{font-size:36px}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3DE0FF"/><stop offset="1" stop-color="#7B5CFF"/></linearGradient>
+    <linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".55" stop-color="#FFB13D"/><stop offset="1" stop-color="#E5762A"/></linearGradient>
+    <symbol id="tt" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="18" fill="url(#gm)"/>
+      <path d="M10 20h24M22 20v26M32 28h22M43 28v18" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <div id="view">
+    <section class="page" id="p-home"></section>
+    <section class="page" id="p-earn"></section>
+    <section class="page" id="p-friends"></section>
+    <section class="page" id="p-board"></section>
+    <section class="page" id="p-profile"></section>
+    <section class="page" id="p-wallet"></section>
+  </div>
+  <nav id="nav">
+    <button data-t="home"><span>🏠</span>Home</button>
+    <button data-t="earn"><span>💰</span>Earn</button>
+    <button data-t="friends"><span>👥</span>Friends</button>
+    <button data-t="board"><span>🏆</span>Ranks</button>
+    <button data-t="profile"><span>👤</span>Profile</button>
+  </nav>
+</div>
+<div id="shade"></div><div id="sheet"></div><div id="toast"></div>
+<div class="load" id="load"><svg class="logo" style="width:72px;height:72px"><use href="#tt"/></svg></div>
+
+<script>
+/* ==========================================================================
+   TT BOT — single-file Mini App
+   --------------------------------------------------------------------------
+   FRONTEND  : everything below the "UI" marker.
+   API LAYER : `Api` — talks to your real backend when CONFIG.API_BASE is set.
+   DEMO SRV  : `DemoServer` — an in-page stand-in that applies the SAME rules
+               a real backend must apply (energy from timestamps, tap rate
+               limits, daily streak, task verification, referral rules,
+               withdrawal checks). It exists so this file runs by itself.
+               It is NOT secure: a browser can never be its own trusted
+               server. For production, move DemoServer's logic to your
+               backend and validate Telegram initData with your bot token.
+   ========================================================================== */
+const CONFIG = {
+  API_BASE: "",                 // e.g. "https://api.yourdomain.com" -> real backend mode
+  BOT_USERNAME: "TT_BOT",       // your bot username (no @)
+  APP_SHORT_NAME: "",           // optional: Mini App short name for direct links
+};
+
+const tg = window.Telegram && Telegram.WebApp && Telegram.WebApp.initData !== undefined ? Telegram.WebApp : null;
+const $ = (s, r = document) => r.querySelector(s);
+const fmt = n => Math.floor(n).toLocaleString("en-US");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* storage that survives sandboxes where localStorage is blocked */
+const store = (() => { const m = {}; let ok = true;
+  try { localStorage.setItem("_t", "1"); localStorage.removeItem("_t"); } catch { ok = false; }
+  return { get: k => ok ? localStorage.getItem(k) : (m[k] ?? null),
+           set: (k, v) => { ok ? localStorage.setItem(k, v) : (m[k] = v); } };
+})();
+
+/* ============================== DEMO SERVER ============================== */
+const DemoServer = (() => {
+  const DAY = 86400000, now = () => Date.now();
+  const DEF = {
+    settings: {
+      appName: "TT BOT", supportUsername: "tt_support", maintenance: false, announcement: "Welcome to TT BOT — tap, complete tasks and invite friends.",
+      baseEnergy: 1000, regenSec: 2, tapReward: 1, maxTapsPerSec: 12,
+      referrerReward: 1000, newUserReward: 500,
+      dailyRewards: [100, 200, 300, 500, 750, 1000, 2500],
+      minWithdraw: 10000, maxWithdraw: 1000000, methods: ["Binance Pay", "USDT (TRC20)", "Other"],
+      levels: [
+        { name: "Beginner", req: 0,        mult: 1, energy: 0 },
+        { name: "Starter",  req: 5000,     mult: 1, energy: 200 },
+        { name: "Explorer", req: 25000,    mult: 2, energy: 400 },
+        { name: "Pro",      req: 100000,   mult: 2, energy: 700 },
+        { name: "Expert",   req: 500000,   mult: 3, energy: 1000 },
+        { name: "Master",   req: 2000000,  mult: 4, energy: 1500 },
+        { name: "Legend",   req: 10000000, mult: 5, energy: 2500 },
+      ],
+    },
+    tasks: [
+      { id: 1, title: "Join TT Community", desc: "Join our Telegram channel, then press Verify.", reward: 500, type: "telegram_channel", url: "https://t.me/telegram", active: true, start: null, end: null, max: 0, claims: 0 },
+      { id: 2, title: "Join TT Chat", desc: "Join the community group.", reward: 400, type: "telegram_group", url: "https://t.me/telegram", active: true, start: null, end: null, max: 0, claims: 0 },
+      { id: 3, title: "Watch the TT intro", desc: "Watch the video, then press Verify.", reward: 300, type: "youtube", url: "https://www.youtube.com/", active: true, start: null, end: null, max: 0, claims: 0 },
+      { id: 4, title: "Visit our website", desc: "Open the site and come back.", reward: 250, type: "website", url: "https://example.com", active: true, start: null, end: null, max: 0, claims: 0 },
+      { id: 5, title: "Follow us on social", desc: "Follow the official account.", reward: 350, type: "social", url: "https://example.com", active: true, start: null, end: null, max: 0, claims: 0 },
+    ],
+    withdrawals: [], bots: [], me: null, announcements: [],
+  };
+  const NAMES = ["Rafi","Mila","Arjun","Zoe","Karim","Lena","Omar","Nina","Tariq","Ivy","Sam","Noor","Jay","Aria","Leo","Maya","Ravi","Ella","Sami","Cora"];
+  let db;
+  function load() {
+    try { db = JSON.parse(store.get("ttbot_demo_db") || "null"); } catch { db = null; }
+    if (!db) {
+      db = JSON.parse(JSON.stringify(DEF));
+      db.bots = NAMES.map((n, i) => ({ id: 9000 + i, name: n, username: n.toLowerCase() + "_tt",
+        balance: Math.floor(5200000 / (i + 1) ** 1.15), referrals: Math.max(0, 40 - i * 2), level: Math.max(1, 7 - Math.floor(i / 3)), tasks: Math.max(1, 12 - Math.floor(i / 2)) }));
+    }
+  }
+  const save = () => store.set("ttbot_demo_db", JSON.stringify(db));
+  const lvlOf = (u, s) => { let l = 0; s.levels.forEach((x, i) => { if (u.totalEarned >= x.req) l = i; }); return l; };
+  const maxEn = (u, s) => s.baseEnergy + s.levels[lvlOf(u, s)].energy;
+  function regen(u) {
+    const s = db.settings, max = maxEn(u, s), t = now();
+    const gained = Math.floor((t - u.energyTs) / 1000 / s.regenSec);
+    if (gained > 0) { u.energy = Math.min(max, u.energy + gained); u.energyTs = u.energy >= max ? t : u.energyTs + gained * s.regenSec * 1000; }
+    if (u.energy > max) u.energy = max;
+  }
+  function tx(u, type, amount, desc, status = "completed") {
+    u.tx.unshift({ id: now() + "" + Math.random().toString(36).slice(2, 6), t: now(), type, amount, desc, status });
+    u.tx = u.tx.slice(0, 200);
+  }
+  function credit(u, amount, type, desc) {   // atomic on a real DB: UPDATE ... SET balance = balance + $1
+    u.balance += amount; if (amount > 0) u.totalEarned += amount; tx(u, type, amount, desc);
+  }
+  function rank(u) {
+    const all = db.bots.map(b => b.balance).concat(u.balance);
+    return all.filter(b => b > u.balance).length + 1;
+  }
+  function view(u) {
+    regen(u);
+    const s = db.settings, l = lvlOf(u, s), nx = s.levels[l + 1];
+    const today = Math.floor(now() / DAY), claimedToday = u.lastDaily === today;
+    const nextDay = claimedToday ? u.streak : (u.lastDaily === today - 1 ? (u.streak % 7) + 1 : 1);
+    return {
+      user: { id: u.id, name: u.name, username: u.username, photo: u.photo, balance: u.balance, totalEarned: u.totalEarned,
+        taps: u.taps, energy: u.energy, maxEnergy: maxEn(u, s), regenSec: s.regenSec,
+        nextRegenMs: Math.max(0, u.energyTs + s.regenSec * 1000 - now()), level: l, levelName: s.levels[l].name,
+        mult: s.levels[l].mult, tapValue: s.tapReward * s.levels[l].mult, nextReq: nx ? nx.req : null, curReq: s.levels[l].req,
+        rank: rank(u), streak: u.streak, claimedToday, nextDay, referrals: u.friends.length,
+        refEarnings: u.refEarnings, tasksDone: Object.keys(u.done).length, suspended: u.suspended, isAdmin: true },
+      settings: { appName: s.appName, supportUsername: s.supportUsername, maintenance: s.maintenance, announcement: s.announcement,
+        dailyRewards: s.dailyRewards, referrerReward: s.referrerReward, newUserReward: s.newUserReward,
+        minWithdraw: s.minWithdraw, maxWithdraw: s.maxWithdraw, methods: s.methods, levels: s.levels },
+    };
+  }
+  function ensureUser(tgu, startParam) {
+    if (!db.me || db.me.id !== tgu.id) {
+      db.me = { id: tgu.id, name: tgu.first_name || "Player", username: tgu.username || "", photo: tgu.photo_url || "",
+        balance: 0, totalEarned: 0, taps: 0, energy: db.settings.baseEnergy, energyTs: now(), lastTap: now(),
+        streak: 0, lastDaily: -1, done: {}, started: {}, tx: [], friends: [], refEarnings: 0, suspended: false, flags: 0, ref: null, seen: {} };
+      const rid = parseInt(startParam, 10);
+      if (rid && rid !== db.me.id && !db.me.ref) {            // self-referral blocked; one referrer per user, ever
+        db.me.ref = rid; credit(db.me, db.settings.newUserReward, "referral", "Welcome bonus (invited)");
+      }
+      save();
+    }
+    return db.me;
+  }
+  const err = (e, code = 400) => ({ ok: false, error: e, code });
+  const ok = (u, extra = {}) => ({ ok: true, ...view(u), ...extra });
+
+  function handle(path, body, auth) {
+    load();
+    const u = ensureUser(auth.user, auth.start);
+    if (u.suspended) return err("Account suspended");
+    if (db.settings.maintenance && !path.startsWith("/api/admin")) return err("Maintenance in progress. Please come back soon.", 503);
+    const s = db.settings;
+    switch (path) {
+      case "/api/auth/telegram": case "/api/user": save(); return ok(u);
+
+      case "/api/tap": {                                       // batched taps + client timestamps, validated here
+        regen(u);
+        let n = Math.max(0, Math.min(500, parseInt(body.taps, 10) || 0));
+        const dt = Math.max(0.25, (now() - u.lastTap) / 1000);
+        const allowed = Math.ceil(dt * s.maxTapsPerSec) + 5;   // human ceiling
+        if (n > allowed) { u.flags++; n = allowed; }           // excess dropped + suspicious flag
+        n = Math.min(n, u.energy);                             // energy is server-owned
+        const val = s.tapReward * s.levels[lvlOf(u, s)].mult;
+        u.energy -= n; u.taps += n; u.balance += n * val; u.totalEarned += n * val; u.lastTap = now();
+        if (u.energy >= maxEn(u, s)) u.energyTs = now();
+        save(); return ok(u, { accepted: n, flagged: u.flags >= 5 });
+      }
+
+      case "/api/daily-reward/claim": {
+        const today = Math.floor(now() / DAY);
+        if (u.lastDaily === today) return err("Already claimed today");
+        // Reset policy: miss a full day -> streak restarts at Day 1. After Day 7 the cycle restarts.
+        u.streak = u.lastDaily === today - 1 ? (u.streak % 7) + 1 : 1;
+        u.lastDaily = today;
+        const amt = s.dailyRewards[u.streak - 1];
+        credit(u, amt, "daily", `Daily reward — day ${u.streak}`);
+        save(); return ok(u, { reward: amt });
+      }
+
+      case "/api/tasks": {
+        const t = now();
+        const list = db.tasks.filter(x => x.active && (!x.start || x.start <= t) && (!x.end || x.end >= t) && (!x.max || x.claims < x.max || u.done[x.id]))
+          .map(x => ({ id: x.id, title: x.title, desc: x.desc, reward: x.reward, type: x.type, url: x.url,
+            status: u.done[x.id] ? "done" : u.started[x.id] ? "verify" : "start" }));
+        return { ok: true, tasks: list };
+      }
+      case "/api/tasks/start": {
+        const x = db.tasks.find(k => k.id === body.id); if (!x || !x.active) return err("Task unavailable");
+        if (!u.done[x.id]) u.started[x.id] = u.started[x.id] || now();
+        save(); return { ok: true };
+      }
+      case "/api/tasks/verify": {
+        const x = db.tasks.find(k => k.id === body.id); if (!x || !x.active) return err("Task unavailable");
+        if (u.done[x.id]) return err("Already completed");
+        if (!u.started[x.id]) return err("Start the task first");
+        if (x.max && x.claims >= x.max) return err("This task has reached its claim limit");
+        // DEMO check: needs >= 6s since start. REAL backend: telegram_channel/group -> getChatMember,
+        // others -> provider callback / admin review. Never reward on click alone.
+        if (now() - u.started[x.id] < 6000) return err("Not completed yet. Finish the action, then verify again.");
+        u.done[x.id] = now(); x.claims++;
+        credit(u, x.reward, "task", `Task: ${x.title}`);
+        save(); return ok(u, { reward: x.reward });
+      }
+
+      case "/api/referrals": {
+        return { ok: true, link: `https://t.me/${CONFIG.BOT_USERNAME}?start=${u.id}`, total: u.friends.length,
+          active: u.friends.filter(f => f.active).length, earnings: u.refEarnings,
+          level: Math.min(5, 1 + Math.floor(u.friends.length / 5)), friends: u.friends.slice(0, 50),
+          reward: s.referrerReward };
+      }
+      case "/api/referrals/simulate": {                        // DEMO ONLY button
+        const f = { id: 100000 + Math.floor(Math.random() * 899999), name: NAMES[Math.floor(Math.random() * NAMES.length)], active: Math.random() > .3, t: now() };
+        u.friends.unshift(f); u.refEarnings += s.referrerReward;
+        credit(u, s.referrerReward, "referral", `Referral: ${f.name}`);
+        save(); return ok(u);
+      }
+
+      case "/api/leaderboard": {
+        const key = { coins: "balance", referrals: "referrals", level: "level", tasks: "tasks" }[body.by] || "balance";
+        const meRow = { id: u.id, name: u.name, username: u.username, balance: u.balance, referrals: u.friends.length, level: lvlOf(u, s) + 1, tasks: Object.keys(u.done).length, me: true };
+        const all = db.bots.map(b => ({ ...b })).concat(meRow).sort((a, b) => b[key] - a[key] || b.balance - a.balance);
+        all.forEach((r, i) => r.rank = i + 1);
+        const off = Math.max(0, body.offset || 0), page = all.slice(off, Math.min(100, off + 25));
+        return { ok: true, rows: page, more: off + 25 < Math.min(100, all.length), me: all.find(r => r.me), key };
+      }
+
+      case "/api/wallet": return { ok: true, ...view(u), tx: u.tx, withdrawals: db.withdrawals.filter(w => w.uid === u.id).reverse() };
+      case "/api/transactions": return { ok: true, tx: u.tx };
+      case "/api/withdraw": {
+        const amt = Math.floor(+body.amount), addr = String(body.address || "").trim(), m = body.method;
+        if (!Number.isFinite(amt) || amt <= 0) return err("Enter a valid amount");
+        if (amt < s.minWithdraw) return err(`Minimum withdrawal is ${fmt(s.minWithdraw)} TT`);
+        if (amt > s.maxWithdraw) return err(`Maximum withdrawal is ${fmt(s.maxWithdraw)} TT`);
+        if (amt > u.balance) return err("Not enough balance");
+        if (!s.methods.includes(m)) return err("Choose a payment method");
+        if (addr.length < 4 || addr.length > 120) return err("Enter a valid wallet or account");
+        if (db.withdrawals.some(w => w.uid === u.id && w.status === "pending")) return err("You already have a pending request");
+        u.balance -= amt;                                       // funds held at request time
+        db.withdrawals.push({ id: db.withdrawals.length + 1, uid: u.id, user: u.name, amount: amt, method: m, address: addr, status: "pending", t: now() });
+        tx(u, "withdraw", -amt, "Withdrawal request", "pending");
+        save(); return ok(u);
+      }
+
+      /* ---- admin (real backend: require admin_users auth + role check on EVERY call) ---- */
+      case "/api/admin/overview": return { ok: true,
+        users: 1 + db.bots.length, active: 1 + Math.floor(db.bots.length / 2), newToday: 1, coins: u.balance + db.bots.reduce((a, b) => a + b.balance, 0),
+        referrals: u.friends.length + db.bots.reduce((a, b) => a + b.referrals, 0), tasksDone: Object.keys(u.done).length,
+        pending: db.withdrawals.filter(w => w.status === "pending").length, settings: s, tasks: db.tasks, withdrawals: db.withdrawals.slice().reverse() };
+      case "/api/admin/settings": {
+        const n = body.settings || {};
+        ["baseEnergy","regenSec","tapReward","referrerReward","newUserReward","minWithdraw","maxWithdraw"].forEach(k => { if (n[k] > 0) s[k] = Math.floor(n[k]); });
+        if (typeof n.maintenance === "boolean") s.maintenance = n.maintenance;
+        if (typeof n.announcement === "string") s.announcement = n.announcement.slice(0, 300);
+        if (typeof n.appName === "string" && n.appName.trim()) s.appName = n.appName.trim().slice(0, 30);
+        if (typeof n.supportUsername === "string") s.supportUsername = n.supportUsername.replace("@", "").slice(0, 32);
+        save(); return { ok: true };
+      }
+      case "/api/admin/task": {
+        const t = body.task;
+        if (!t.title || !(t.reward > 0)) return err("Title and reward are required");
+        if (t.id) { Object.assign(db.tasks.find(x => x.id === t.id) || {}, t); }
+        else db.tasks.push({ id: now(), claims: 0, active: true, start: null, end: null, max: 0, ...t });
+        save(); return { ok: true };
+      }
+      case "/api/admin/task/toggle": { const x = db.tasks.find(k => k.id === body.id); if (x) x.active = !x.active; save(); return { ok: true }; }
+      case "/api/admin/withdrawal": {
+        const w = db.withdrawals.find(k => k.id === body.id); if (!w) return err("Not found");
+        if (!["approved", "rejected", "completed"].includes(body.status)) return err("Bad status");
+        if (w.status === "rejected" || w.status === "completed") return err("Already final");
+        if (body.status === "rejected") { u.balance += w.amount; tx(u, "refund", w.amount, "Withdrawal rejected — refunded"); }
+        w.status = body.status;
+        const row = u.tx.find(x => x.type === "withdraw" && x.status === "pending"); if (row) row.status = body.status;
+        save(); return { ok: true };
+      }
+      case "/api/admin/adjust": {
+        const a = Math.trunc(+body.amount); if (!a) return err("Enter an amount");
+        credit(u, a, "admin", "Admin adjustment: " + String(body.reason || "no reason").slice(0, 80)); save(); return ok(u);
+      }
+    }
+    return err("Not found", 404);
+  }
+  return { handle };
+})();
+
+/* ================================= API =================================== */
+const Api = {
+  demo: !CONFIG.API_BASE,
+  async call(path, body = {}) {
+    if (this.demo) {
+      const tu = tg?.initDataUnsafe?.user || { id: 777000111, first_name: "Demo", username: "demo_user" };
+      await new Promise(r => setTimeout(r, 40));
+      return DemoServer.handle(path, body, { user: tu, start: tg?.initDataUnsafe?.start_param || new URLSearchParams(location.search).get("ref") });
+    }
+    try {
+      const r = await fetch(CONFIG.API_BASE + path, { method: "POST",
+        headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg?.initData || "" },
+        body: JSON.stringify({ ...body, ts: Date.now(), nonce: crypto.randomUUID?.() || String(Math.random()) }) });
+      return await r.json();
+    } catch { return { ok: false, error: "Network error. Check your connection." }; }
+  },
+};
+
+/* ================================== UI =================================== */
+let S = null;                 // {user, settings}
+let tab = "home", prevTab = "home";
+let pendingTaps = 0, inflight = false, flushTimer = null;
+const ui = {};
+
+/* ---- theme ---- */
+function applyTheme() {
+  const dark = tg ? tg.colorScheme !== "light" : !matchMedia("(prefers-color-scheme: light)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+  try { tg?.setHeaderColor?.(bg); tg?.setBackgroundColor?.(bg); tg?.setBottomBarColor?.(bg); } catch {}
+}
+
+/* ---- helpers ---- */
+function toast(msg, ms = 2200) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), ms);
+}
+const hap = (k = "light") => { try { tg?.HapticFeedback?.impactOccurred(k); } catch { navigator.vibrate?.(8); } };
+const hapN = k => { try { tg?.HapticFeedback?.notificationOccurred(k); } catch {} };
+function openSheet(html) { $("#sheet").innerHTML = html; $("#shade").style.display = "block"; requestAnimationFrame(() => $("#sheet").classList.add("on")); tgBack(); }
+function closeSheet() { $("#sheet").classList.remove("on"); setTimeout(() => $("#shade").style.display = "none", 200); tgBack(); }
+$("#shade").onclick = closeSheet;
+const sheetOpen = () => $("#sheet").classList.contains("on");
+const logo = (s = 36) => `<svg class="logo" style="width:${s}px;height:${s}px"><use href="#tt"/></svg>`;
+const ava = u => `<div class="ava">${u.photo ? `<img src="${esc(u.photo)}" alt="" loading="lazy">` : esc((u.name || "?")[0].toUpperCase())}</div>`;
+const ago = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? m + "m ago" : m < 1440 ? Math.floor(m / 60) + "h ago" : new Date(t).toLocaleDateString(); };
+const typeIcon = { telegram_channel: "📢", telegram_group: "💬", website: "🌐", youtube: "▶️", social: "🔗", custom: "⭐" };
+
+/* ---- navigation / Telegram buttons ---- */
+function go(t, push = true) {
+  if (push && t !== tab) prevTab = tab;
+  tab = t;
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("on", p.id === "p-" + t));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  $("#view").scrollTop = 0;
+  ({ home: renderHome, earn: renderEarn, friends: renderFriends, board: renderBoard, profile: renderProfile, wallet: renderWallet })[t]?.();
+  tgBack(); tgMain();
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => { hap("light"); go(b.dataset.t); });
+
+function tgBack() {
+  if (!tg?.BackButton) return;
+  const need = sheetOpen() || tab === "wallet";
+  need ? tg.BackButton.show() : tg.BackButton.hide();
+}
+function tgMain() {
+  const mb = tg?.MainButton; if (!mb) return;
+  mb.offClick(mb._h || (() => {}));
+  let cfg = null;
+  if (tab === "friends") cfg = { text: "Invite friends", fn: inviteFriends };
+  else if (tab === "earn" && S && !S.user.claimedToday) cfg = { text: "Claim daily reward", fn: claimDaily };
+  if (!cfg) { mb.hide(); return; }
+  mb._h = cfg.fn; mb.setText(cfg.text); mb.onClick(cfg.fn); mb.show();
+}
+tg?.BackButton?.onClick(() => { if (sheetOpen()) closeSheet(); else go(prevTab === "wallet" ? "home" : prevTab, false); });
+
+/* ============================== HOME / TAP =============================== */
+function renderHome() {
+  const u = S.user;
+  $("#p-home").innerHTML = `
+    <div class="row">
+      ${ava(u)}
+      <div class="sp"><div class="ellip" style="font-weight:700">${esc(u.name)}</div>
+        <div class="mut">Level ${u.level + 1} · ${esc(u.levelName)}</div></div>
+      <button class="chip" data-a="wallet">💳 Wallet</button>
+    </div>
+    <div class="bal"><b class="num" id="h-bal">${fmt(u.balance)}</b><span>TT</span></div>
+    <div class="mut" style="text-align:center">+<span id="h-val">${u.tapValue}</span> TT per tap · ×${u.mult} level bonus</div>
+    <div class="stage"><button id="coin" aria-label="Tap to earn TT">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="96" fill="url(#gc)"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3"/>
+        <circle cx="100" cy="100" r="72" fill="rgba(120,50,0,.12)"/>
+        <path d="M48 76h56M76 76v58M96 94h56M124 94v40" stroke="#7A3A00" stroke-width="15" stroke-linecap="round" fill="none" opacity=".35" transform="translate(0,3)"/>
+        <path d="M48 76h56M76 76v58M96 94h56M124 94v40" stroke="#FFF8E1" stroke-width="15" stroke-linecap="round" fill="none"/>
+      </svg></button></div>
+    <div class="card" style="margin-top:6px">
+      <div class="row"><b>⚡ <span class="num" id="h-en"></span></b><span class="sp"></span><span class="mut" id="h-cd"></span></div>
+      <div class="bar en" style="margin-top:8px"><i id="h-enbar"></i></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="row"><b>${esc(u.levelName)}</b><span class="sp"></span><span class="mut" id="h-lvl"></span></div>
+      <div class="bar" style="margin-top:8px"><i id="h-lvbar"></i></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card stat"><span class="mut">🔥 Daily streak</span><b>${u.streak} day${u.streak === 1 ? "" : "s"}</b></div>
+      <div class="card stat"><span class="mut">🏅 Rank</span><b>#${fmt(u.rank)}</b></div>
+      <div class="card stat"><span class="mut">Total earned</span><b class="num" id="h-tot">${fmt(u.totalEarned)}</b></div>
+      <div class="card stat"><span class="mut">Total taps</span><b class="num" id="h-taps">${fmt(u.taps)}</b></div>
+    </div>`;
+  ui.coin = $("#coin");
+  bindCoin(); paintHome();
+}
+
+function paintHome() {
+  const u = S.user; if (tab !== "home" || !$("#h-bal")) return;
+  $("#h-bal").textContent = fmt(u.balance);
+  $("#h-tot").textContent = fmt(u.totalEarned);
+  $("#h-taps").textContent = fmt(u.taps);
+  $("#h-en").textContent = `${fmt(u.energy)} / ${fmt(u.maxEnergy)}`;
+  $("#h-enbar").style.width = (u.energy / u.maxEnergy * 100) + "%";
+  $("#coin").classList.toggle("dis", u.energy < 1);
+  if (u.nextReq) {
+    const p = Math.min(1, (u.totalEarned - u.curReq) / (u.nextReq - u.curReq));
+    $("#h-lvbar").style.width = (p * 100) + "%";
+    $("#h-lvl").textContent = `${fmt(u.nextReq - u.totalEarned)} TT to next level`;
+  } else { $("#h-lvbar").style.width = "100%"; $("#h-lvl").textContent = "Max level"; }
+}
+
+/* local energy clock (display only — server is the source of truth) */
+function energyTick() {
+  const u = S?.user; if (!u) return;
+  if (u.energy < u.maxEnergy) {
+    u.nextRegenMs -= 250;
+    while (u.nextRegenMs <= 0 && u.energy < u.maxEnergy) { u.energy++; u.nextRegenMs += u.regenSec * 1000; }
+    const cd = $("#h-cd"); if (cd && tab === "home") cd.textContent = `+1 in ${Math.max(1, Math.ceil(u.nextRegenMs / 1000))}s`;
+    if (tab === "home" && $("#h-en")) { $("#h-en").textContent = `${fmt(u.energy)} / ${fmt(u.maxEnergy)}`; $("#h-enbar").style.width = (u.energy / u.maxEnergy * 100) + "%"; $("#coin")?.classList.toggle("dis", u.energy < 1); }
+  } else { const cd = $("#h-cd"); if (cd) cd.textContent = "Full"; u.nextRegenMs = u.regenSec * 1000; }
+}
+setInterval(energyTick, 250);
+
+/* floating numbers: small DOM pool, no layout thrash */
+const pool = [];
+function floatText(x, y, txt) {
+  let el = pool.pop();
+  if (!el) { el = document.createElement("div"); el.className = "fl"; el.addEventListener("animationend", () => { el.remove(); pool.push(el); }); }
+  el.textContent = txt; el.style.left = x + "px"; el.style.top = (y - 30) + "px";
+  el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  document.body.appendChild(el);
+}
+let lastNoEn = 0;
+function bindCoin() {
+  const c = ui.coin;
+  c.addEventListener("pointerdown", e => {
+    const u = S.user;
+    if (u.energy < 1) { if (Date.now() - lastNoEn > 1200) { toast("⚡ Not enough energy"); hapN("warning"); lastNoEn = Date.now(); } return; }
+    u.energy--; u.balance += u.tapValue; u.totalEarned += u.tapValue; u.taps++; pendingTaps++;
+    const r = c.getBoundingClientRect(), dx = (e.clientX - r.left) / r.width - .5, dy = (e.clientY - r.top) / r.height - .5;
+    c.style.transform = `perspective(500px) rotateX(${-dy * 16}deg) rotateY(${dx * 16}deg) scale(.95)`;
+    clearTimeout(c._r); c._r = setTimeout(() => c.style.transform = "", 90);
+    floatText(e.clientX, e.clientY, "+" + u.tapValue);
+    hap("light"); paintHome();
+    if (pendingTaps >= 40) flush(); else if (!flushTimer) flushTimer = setTimeout(flush, 700);
+  });
+  c.addEventListener("contextmenu", e => e.preventDefault());
+}
+
+/* send batched taps; server returns authoritative balance/energy */
+async function flush() {
+  clearTimeout(flushTimer); flushTimer = null;
+  if (inflight || !pendingTaps) return;
+  inflight = true; const n = pendingTaps; pendingTaps = 0;
+  const res = await Api.call("/api/tap", { taps: n });
+  inflight = false;
+  if (res.ok) {
+    const keepE = pendingTaps, val = res.user.tapValue;
+    S = { user: res.user, settings: res.settings };
+    S.user.balance += keepE * val; S.user.totalEarned += keepE * val; S.user.energy = Math.max(0, S.user.energy - keepE);
+    if (res.flagged) toast("Unusual tap speed detected");
+    paintHome();
+  } else { toast(res.error || "Sync failed"); refresh(); }
+  if (pendingTaps) flushTimer = setTimeout(flush, 400);
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+addEventListener("pagehide", flush);
+
+/* ================================ EARN =================================== */
+async function renderEarn() {
+  const el = $("#p-earn"), u = S.user, st = S.settings;
+  const days = st.dailyRewards.map((r, i) => {
+    const n = i + 1, done = u.claimedToday ? n <= u.streak : n < u.nextDay, now = !u.claimedToday && n === u.nextDay;
+    return `<div class="day ${done ? "done" : ""} ${now ? "now" : ""}">D${n}<b>${r >= 1000 ? r / 1000 + "k" : r}</b>${done ? "✓" : ""}</div>`;
+  }).join("");
+  el.innerHTML = `<h2>Earn</h2>
+    ${st.announcement ? `<div class="card banner">📣 ${esc(st.announcement)}</div>` : ""}
+    <div class="card">
+      <div class="row"><b>🔥 Daily reward</b><span class="sp"></span><span class="chip">Streak ${u.streak}</span></div>
+      <div class="days">${days}</div>
+      <button class="btn full" id="e-claim" ${u.claimedToday ? "disabled" : ""}>${u.claimedToday ? "Claimed — come back tomorrow" : "Claim " + fmt(st.dailyRewards[u.nextDay - 1]) + " TT"}</button>
+      <div class="mut" style="margin-top:8px">Miss a day and your streak restarts at Day 1. After Day 7 it starts again.</div>
+    </div>
+    <h3>Tasks</h3><div id="e-tasks"><div class="empty">Loading…</div></div>`;
+  $("#e-claim").onclick = claimDaily;
+  const r = await Api.call("/api/tasks"); if (tab !== "earn") return;
+  $("#e-tasks").innerHTML = r.ok && r.tasks.length ? r.tasks.map(t => `
+    <div class="card item">
+      <div class="ico">${typeIcon[t.type] || "⭐"}</div>
+      <div class="sp"><b class="ellip" style="display:block">${esc(t.title)}</b><div class="mut">${esc(t.desc)}</div>
+        <div class="plus" style="font-size:13px;margin-top:2px">+${fmt(t.reward)} TT</div></div>
+      ${t.status === "done" ? `<span class="badge b-completed">Done</span>`
+        : t.status === "verify" ? `<button class="btn ok sm" data-v="${t.id}">Verify</button>`
+        : `<button class="btn sm" data-s="${t.id}" data-u="${esc(t.url)}">${t.type.startsWith("telegram") ? "Join" : "Start"}</button>`}
+    </div>`).join("") : `<div class="empty">No tasks right now. Check back soon.</div>`;
+  $("#e-tasks").onclick = async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.s) {
+      const url = b.dataset.u;
+      /^https:\/\/t\.me\//.test(url) && tg?.openTelegramLink ? tg.openTelegramLink(url) : tg?.openLink ? tg.openLink(url) : window.open(url, "_blank", "noopener");
+      await Api.call("/api/tasks/start", { id: +b.dataset.s }); renderEarn();
+    } else if (b.dataset.v) {
+      b.disabled = true; const r = await Api.call("/api/tasks/verify", { id: +b.dataset.v });
+      if (r.ok) { S = { user: r.user, settings: r.settings }; hapN("success"); toast(`+${fmt(r.reward)} TT earned`); } else { hapN("error"); toast(r.error); }
+      renderEarn();
+    }
+  };
+  tgMain();
+}
+async function claimDaily() {
+  const r = await Api.call("/api/daily-reward/claim");
+  if (r.ok) { S = { user: r.user, settings: r.settings }; hapN("success"); toast(`🔥 +${fmt(r.reward)} TT — day ${r.user.streak}`); } else toast(r.error);
+  if (tab === "earn") renderEarn(); tgMain();
+}
+
+/* =============================== FRIENDS ================================= */
+async function renderFriends() {
+  const el = $("#p-friends"); el.innerHTML = `<h2>Friends</h2><div class="empty">Loading…</div>`;
+  const r = await Api.call("/api/referrals"); if (!r.ok || tab !== "friends") return;
+  el.innerHTML = `<h2>👥 Invite friends</h2>
+    <div class="card banner">Invite friends and earn TT.<div class="mut" style="color:inherit;opacity:.85;margin-top:4px">You get ${fmt(r.reward)} TT for each friend who joins. They get ${fmt(S.settings.newUserReward)} TT.</div></div>
+    <div class="grid2">
+      <div class="card stat"><span class="mut">Total friends</span><b>${r.total}</b></div>
+      <div class="card stat"><span class="mut">Active friends</span><b>${r.active}</b></div>
+      <div class="card stat"><span class="mut">Referral earnings</span><b class="num">${fmt(r.earnings)} TT</b></div>
+      <div class="card stat"><span class="mut">Referral level</span><b>Level ${r.level}</b></div>
+    </div>
+    <div class="card" style="margin-top:10px"><div class="mut">Your referral link</div>
+      <div class="ellip" style="font-weight:600;margin:4px 0 10px" id="f-link">${esc(r.link)}</div>
+      <div class="row"><button class="btn sec sp" id="f-copy">Copy link</button><button class="btn sp" id="f-inv">Invite friends</button></div></div>
+    ${Api.demo ? `<button class="btn sec sm full" id="f-sim" style="margin-top:10px">Demo: simulate a friend joining</button>` : ""}
+    <h3>Your friends</h3>
+    ${r.friends.length ? r.friends.map(f => `<div class="card item"><div class="ava">${esc(f.name[0])}</div><div class="sp"><b>${esc(f.name)}</b><div class="mut">Joined ${ago(f.t)}</div></div><span class="plus">+${fmt(r.reward)}</span></div>`).join("") : `<div class="empty">No friends yet. Share your link to start earning.</div>`}`;
+  window._ref = r;
+  $("#f-copy").onclick = async () => { try { await navigator.clipboard.writeText(r.link); } catch { const t = document.createElement("textarea"); t.value = r.link; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); } hapN("success"); toast("Link copied"); };
+  $("#f-inv").onclick = inviteFriends;
+  $("#f-sim")?.addEventListener("click", async () => { const x = await Api.call("/api/referrals/simulate"); if (x.ok) S = { user: x.user, settings: x.settings }; renderFriends(); });
+  tgMain();
+}
+function inviteFriends() {
+  const link = window._ref?.link || `https://t.me/${CONFIG.BOT_USERNAME}?start=${S.user.id}`;
+  const text = "Tap, finish tasks and collect TT Coins with me on TT BOT 🚀";
+  const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  tg?.openTelegramLink ? tg.openTelegramLink(url) : window.open(url, "_blank", "noopener");
+}
+
+/* ============================== LEADERBOARD ============================== */
+let boardBy = "coins";
+async function renderBoard(more = 0) {
+  const el = $("#p-board");
+  if (!more) el.innerHTML = `<h2>🏆 Leaderboard</h2>
+    <div class="seg" id="b-seg">${[["coins","TT Coins"],["referrals","Referrals"],["level","Level"],["tasks","Tasks"]].map(([k, l]) => `<button data-k="${k}" class="${k === boardBy ? "on" : ""}">${l}</button>`).join("")}</div>
+    <div id="b-list"><div class="empty">Loading…</div></div><div id="b-me"></div>`;
+  const r = await Api.call("/api/leaderboard", { by: boardBy, offset: more }); if (!r.ok || tab !== "board") return;
+  const val = x => ({ coins: fmt(x.balance) + " TT", referrals: x.referrals + " friends", level: "Level " + x.level, tasks: x.tasks + " tasks" })[boardBy];
+  const row = x => `<div class="card item ${x.me ? "me" : ""}" style="${x.me ? "border-color:var(--cy)" : ""}">
+    <div style="width:34px;font-weight:800;font-size:${x.rank <= 3 ? 22 : 15}px;text-align:center">${["🥇","🥈","🥉"][x.rank - 1] || "#" + x.rank}</div>
+    <div class="sp"><b class="ellip" style="display:block">${esc(x.name)}${x.me ? " (you)" : ""}</b><div class="mut">@${esc(x.username || "user")}</div></div>
+    <b class="num">${val(x)}</b></div>`;
+  const list = $("#b-list"); if (!more) list.innerHTML = "";
+  list.insertAdjacentHTML("beforeend", r.rows.map(row).join(""));
+  list.querySelector("#b-more")?.remove();
+  if (r.more) { list.insertAdjacentHTML("beforeend", `<button class="btn sec full" id="b-more">Load more</button>`); $("#b-more").onclick = () => renderBoard(list.querySelectorAll(".item").length); }
+  $("#b-me").innerHTML = row(r.me).replace('class="card item', 'class="card item me');
+  $("#b-seg").onclick = e => { const b = e.target.closest("button"); if (b) { boardBy = b.dataset.k; renderBoard(); } };
+}
+
+/* ================================ WALLET ================================= */
+async function renderWallet(view = "tx") {
+  const el = $("#p-wallet"); el.innerHTML = `<h2>Wallet</h2><div class="empty">Loading…</div>`;
+  const r = await Api.call("/api/wallet"); if (!r.ok || tab !== "wallet") return;
+  S = { user: r.user, settings: r.settings };
+  el.innerHTML = `<h2>💳 Wallet</h2>
+    <div class="card" style="text-align:center"><div class="mut">Current balance</div>
+      <div class="bal" style="margin:2px 0 12px"><b class="num" style="font-size:38px">${fmt(r.user.balance)}</b><span>TT</span></div>
+      <div class="row"><button class="btn sec sp" id="w-dep">Deposit</button><button class="btn sp" id="w-wd">Withdraw</button></div></div>
+    <div class="mut" style="margin:10px 4px">TT Coins are in-app reward points. They have no guaranteed cash value. Withdrawals are requests reviewed by the team, and only available if the operator supports payouts.</div>
+    <div class="seg"><button class="${view === "tx" ? "on" : ""}" data-v="tx">Transactions</button><button class="${view === "wd" ? "on" : ""}" data-v="wd">Withdrawals</button></div>
+    ${view === "tx" ? (r.tx.length ? r.tx.map(t => `<div class="card item"><div class="ico">${{ daily: "🔥", referral: "👥", task: "✅", withdraw: "📤", refund: "↩️", admin: "🛠" }[t.type] || "🪙"}</div>
+        <div class="sp"><b class="ellip" style="display:block">${esc(t.desc)}</b><div class="mut">${new Date(t.t).toLocaleString()} · ${esc(t.type)}</div></div>
+        <div style="text-align:right"><div class="num ${t.amount >= 0 ? "plus" : "minus"}">${t.amount >= 0 ? "+" : ""}${fmt(t.amount)} TT</div>${t.status !== "completed" ? `<span class="badge b-${t.status}">${t.status}</span>` : ""}</div></div>`).join("") : `<div class="empty">No transactions yet.</div>`)
+    : (r.withdrawals.length ? r.withdrawals.map(w => `<div class="card item"><div class="ico">📤</div><div class="sp"><b>${fmt(w.amount)} TT</b><div class="mut">${esc(w.method)} · ${ago(w.t)}</div></div><span class="badge b-${w.status}">${w.status}</span></div>`).join("") : `<div class="empty">No withdrawal requests.</div>`)}`;
+  el.querySelector(".seg").onclick = e => { const b = e.target.closest("button"); if (b) renderWallet(b.dataset.v); };
+  $("#w-dep").onclick = () => openSheet(`<h2>Deposit</h2><div class="mut">Deposits aren't available in this version. TT Coins are earned by tapping, tasks and invites.</div><button class="btn full" style="margin-top:16px" onclick="closeSheet()">Got it</button>`);
+  $("#w-wd").onclick = () => withdrawSheet(r.settings);
+}
+function withdrawSheet(st) {
+  openSheet(`<h2>Withdraw</h2><div class="mut">Minimum ${fmt(st.minWithdraw)} TT · maximum ${fmt(st.maxWithdraw)} TT. One pending request at a time.</div>
+    <label>Amount (TT)</label><input id="wd-a" type="number" inputmode="numeric" min="${st.minWithdraw}" placeholder="${st.minWithdraw}">
+    <label>Payment method</label><select id="wd-m">${st.methods.map(m => `<option>${esc(m)}</option>`).join("")}</select>
+    <label>Wallet or account address</label><input id="wd-d" autocomplete="off" placeholder="Paste your address or ID">
+    <button class="btn full" id="wd-go" style="margin-top:18px">Request withdrawal</button>`);
+  $("#wd-go").onclick = async () => {
+    const b = $("#wd-go"); b.disabled = true;
+    const r = await Api.call("/api/withdraw", { amount: $("#wd-a").value, method: $("#wd-m").value, address: $("#wd-d").value });
+    b.disabled = false;
+    if (r.ok) { S = { user: r.user, settings: r.settings }; closeSheet(); hapN("success"); toast("Request sent. Status: pending"); renderWallet("wd"); } else { hapN("error"); toast(r.error); }
+  };
+}
+
+/* =============================== PROFILE ================================= */
+function renderProfile() {
+  const u = S.user;
+  $("#p-profile").innerHTML = `
+    <div style="text-align:center;margin:8px 0 14px">
+      <div class="ava" style="width:84px;height:84px;font-size:32px;margin:0 auto 10px">${u.photo ? `<img src="${esc(u.photo)}" alt="">` : esc(u.name[0].toUpperCase())}</div>
+      <div style="font-size:20px;font-weight:800">${esc(u.name)}</div>
+      <div class="mut">${u.username ? "@" + esc(u.username) : "No username"}</div>
+      <div class="chip" style="margin-top:10px">Level ${u.level + 1} — ${esc(u.levelName)}</div>
+    </div>
+    <div class="card stat" style="text-align:center"><span class="mut">TT balance</span><b class="num" style="font-size:28px">${fmt(u.balance)} TT</b></div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card stat"><span class="mut">Rank</span><b>#${fmt(u.rank)}</b></div>
+      <div class="card stat"><span class="mut">Referrals</span><b>${u.referrals}</b></div>
+      <div class="card stat"><span class="mut">Tasks completed</span><b>${u.tasksDone}</b></div>
+      <div class="card stat"><span class="mut">Total earned</span><b class="num">${fmt(u.totalEarned)}</b></div>
+    </div>
+    <div class="card row" style="margin-top:10px"><span class="mut">Telegram ID</span><span class="sp"></span><b class="num">${u.id}</b></div>
+    <h3>Level benefits</h3>
+    ${S.settings.levels.map((l, i) => `<div class="card item" style="${i === u.level ? "border-color:var(--cy)" : i > u.level ? "opacity:.6" : ""}"><div class="ico">${i <= u.level ? "✅" : "🔒"}</div>
+      <div class="sp"><b>${esc(l.name)}</b><div class="mut">${fmt(l.req)} TT · ×${l.mult} per tap · +${fmt(l.energy)} energy</div></div></div>`).join("")}
+    <div class="row" style="margin-top:12px"><button class="btn sec sp" id="pr-help">💬 Support</button>${u.isAdmin && Api.demo ? `<button class="btn sec sp" id="pr-admin">🛠 Admin (demo)</button>` : ""}</div>`;
+  $("#pr-help").onclick = () => { const l = `https://t.me/${S.settings.supportUsername}`; tg?.openTelegramLink ? tg.openTelegramLink(l) : window.open(l, "_blank", "noopener"); };
+  $("#pr-admin")?.addEventListener("click", adminSheet);
+}
+
+/* ============================ ADMIN (sheet) ============================== */
+/* In production the admin panel is a separate app at /admin with its own login (admin_users, hashed
+   passwords + 2FA or Telegram-ID allowlist) and role checks on every /api/admin/* route.
+   This sheet is shown only in demo mode so you can see the flows. */
+async function adminSheet() {
+  const r = await Api.call("/api/admin/overview"); if (!r.ok) return toast(r.error);
+  const s = r.settings;
+  const f = (k, l) => `<label>${l}</label><input data-k="${k}" type="number" value="${s[k]}">`;
+  openSheet(`<h2>Admin</h2>
+    <div class="grid2">${[["Users", r.users], ["Active", r.active], ["New today", r.newToday], ["Total TT", fmt(r.coins)], ["Referrals", r.referrals], ["Tasks done", r.tasksDone], ["Pending withdrawals", r.pending]].map(([l, v]) => `<div class="card stat"><span class="mut">${l}</span><b class="num">${v}</b></div>`).join("")}</div>
+    <h3>Settings</h3>
+    ${f("baseEnergy", "Maximum energy")}${f("regenSec", "Seconds per +1 energy")}${f("tapReward", "Tap reward")}${f("referrerReward", "Referrer reward")}${f("newUserReward", "New user reward")}${f("minWithdraw", "Minimum withdrawal")}${f("maxWithdraw", "Maximum withdrawal")}
+    <label>Announcement / banner</label><input id="ad-an" value="${esc(s.announcement)}">
+    <label>Maintenance mode</label><select id="ad-mt"><option value="0" ${s.maintenance ? "" : "selected"}>Off</option><option value="1" ${s.maintenance ? "selected" : ""}>On</option></select>
+    <button class="btn full" id="ad-save" style="margin-top:14px">Save settings</button>
+    <h3>New task</h3>
+    <label>Title</label><input id="nt-t"><label>Description</label><input id="nt-d"><label>Reward (TT)</label><input id="nt-r" type="number"><label>URL</label><input id="nt-u" placeholder="https://">
+    <label>Type</label><select id="nt-y">${Object.keys(typeIcon).map(k => `<option>${k}</option>`).join("")}</select>
+    <label>Maximum claims (0 = unlimited)</label><input id="nt-m" type="number" value="0">
+    <button class="btn full" id="nt-go" style="margin-top:14px">Create task</button>
+    <h3>Tasks</h3>${r.tasks.map(t => `<div class="card item"><div class="sp"><b class="ellip" style="display:block">${esc(t.title)}</b><div class="mut">${t.claims} claims · ${fmt(t.reward)} TT</div></div><button class="btn sec sm" data-tg="${t.id}">${t.active ? "Deactivate" : "Activate"}</button></div>`).join("")}
+    <h3>Withdrawals</h3>${r.withdrawals.length ? r.withdrawals.map(w => `<div class="card" style="margin-bottom:8px"><div class="row"><b>${fmt(w.amount)} TT</b><span class="sp"></span><span class="badge b-${w.status}">${w.status}</span></div><div class="mut ellip">${esc(w.method)} · ${esc(w.address)}</div>
+      ${["pending", "approved"].includes(w.status) ? `<div class="row" style="margin-top:8px">${w.status === "pending" ? `<button class="btn ok sm sp" data-w="${w.id}" data-s="approved">Approve</button>` : `<button class="btn ok sm sp" data-w="${w.id}" data-s="completed">Mark completed</button>`}<button class="btn sec sm sp" data-w="${w.id}" data-s="rejected">Reject</button></div>` : ""}</div>`).join("") : `<div class="empty">None</div>`}
+    <h3>Balance adjustment (audit logged)</h3>
+    <label>Amount (+/−)</label><input id="aj-a" type="number"><label>Reason</label><input id="aj-r"><button class="btn sec full" id="aj-go" style="margin-top:14px">Apply</button>`);
+  const sh = $("#sheet");
+  $("#ad-save").onclick = async () => {
+    const n = { announcement: $("#ad-an").value, maintenance: $("#ad-mt").value === "1" };
+    sh.querySelectorAll("input[data-k]").forEach(i => n[i.dataset.k] = +i.value);
+    const x = await Api.call("/api/admin/settings", { settings: n }); toast(x.ok ? "Settings saved" : x.error); if (x.ok) refresh();
+  };
+  $("#nt-go").onclick = async () => {
+    const x = await Api.call("/api/admin/task", { task: { title: $("#nt-t").value.trim(), desc: $("#nt-d").value.trim(), reward: +$("#nt-r").value, url: $("#nt-u").value.trim(), type: $("#nt-y").value, max: +$("#nt-m").value } });
+    toast(x.ok ? "Task created" : x.error); if (x.ok) adminSheet();
+  };
+  $("#aj-go").onclick = async () => { const x = await Api.call("/api/admin/adjust", { amount: $("#aj-a").value, reason: $("#aj-r").value }); if (x.ok) { S = { user: x.user, settings: x.settings }; toast("Adjusted"); } else toast(x.error); };
+  sh.onclick = async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.tg) { await Api.call("/api/admin/task/toggle", { id: +b.dataset.tg }); adminSheet(); }
+    if (b.dataset.w) { const x = await Api.call("/api/admin/withdrawal", { id: +b.dataset.w, status: b.dataset.s }); toast(x.ok ? "Updated" : x.error); adminSheet(); refresh(); }
+  };
+}
+
+/* ================================= BOOT ================================== */
+async function refresh() {
+  const r = await Api.call("/api/user");
+  if (!r.ok) { document.body.innerHTML = `<div class="load" style="text-align:center;padding:30px"><div>${logo(64)}<h2 style="margin-top:16px">${esc(r.error || "Something went wrong")}</h2><button class="btn" style="margin-top:12px" onclick="location.reload()">Try again</button></div></div>`; return; }
+  S = { user: r.user, settings: r.settings };
+  if (tab === "home") paintHome();
+}
+async function boot() {
+  try { tg?.ready(); tg?.expand(); tg?.disableVerticalSwipes?.(); tg?.setHeaderColor?.("secondary_bg_color"); } catch {}
+  applyTheme(); tg?.onEvent?.("themeChanged", applyTheme);
+  await refresh(); if (!S) return;
+  document.title = S.settings.appName;
+  $("#load").style.display = "none";
+  go("home", false);
+  setInterval(() => { if (!document.hidden && !pendingTaps && !inflight) refresh(); }, 60000);   // light resync
+}
+boot();
+</script>
+</body>
+</html>
